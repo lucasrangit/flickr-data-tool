@@ -72,6 +72,10 @@ def main(arguments):
 
     args = parser.parse_args(arguments)
 
+    if os.path.realpath(args.data) == os.path.realpath(args.dest):
+        print("Source and Destination must be different")
+        return 1
+
     if not os.path.exists(os.path.join(args.metadata, "albums.json")):
         raise Exception("metadata/albums.json not found")
 
