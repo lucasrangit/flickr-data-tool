@@ -13,6 +13,7 @@ from glob import glob
 import json
 import os
 from pprint import pprint
+import shutil
 import sys
 
 def photo_handler(args, photo, album_path):
@@ -34,8 +35,8 @@ def photo_handler(args, photo, album_path):
         raise Exception("FIXME multiple file match found")
 
     photo_dest_path = os.path.join(album_path, os.path.basename(matches[0]))
-    os.link(matches[0], photo_dest_path)
-    
+    shutil.move(matches[0], photo_dest_path)
+
 def album_handler(args, album):
     """
     """
