@@ -16,26 +16,49 @@ from pprint import pprint
 import shutil
 import sys
 
+photos_processed = list()
+
+def photo_get_path(args, photo_json):
+    # TOOD Flickr file naming scheme: lower case, remove "."
+    photo_path = photo_json["name"].lower().replace(".", "") + "_" + photo_json["id"] + "*"
+
+    matches = glob(os.path.join(args.src, photo_path))
+
+    # skip not found (allows restart if interrupted)
+    if len(matches) == 0:
+        return # skip and don't assume processed
+
+    if len(matches) > 1:
+        print(matches)
+        raise Exception("FIXME multiple file match found")
+
+    return matches[0]
+
 def photo_handler(args, photo, album_path):
     """
     Can also be a movie file.
+
     """
+    print("Photo: %s (id %s albums %d)" % (photo["name"], photo["id"], len(photo["albums"])))
     # print(photo)
 
-    # TOOD Flickr file naming scheme: lower case, remove "."
-    photo_path = photo["name"].lower().replace(".", "") + "_" + photo["id"] + "*"
-    matches = glob(os.path.join(args.src, photo_path))
-    if len(matches) == 0:
-        return # TODO
-        # raise Exception("FIXME no matching found")
+    # validate
+    # TODO photo["albums"] is not reliable and may not match the data in albums.json
     
-    print(matches)
-    
-    if len(matches) > 1:
-        raise Exception("FIXME multiple file match found")
+    # get path
+    photo_path = photo_get_path(args, photo)
+    if not photo_path:
+        return
 
-    photo_dest_path = os.path.join(album_path, os.path.basename(matches[0]))
-    shutil.move(matches[0], photo_dest_path)
+    # track
+    if photo["id"] in photos_processed:
+        print(photo)
+        raise Exception("FIXME multiple destination albums")
+    photos_processed.append(photo["id"])
+
+    # organize
+    photo_dest_path = os.path.join(album_path, os.path.basename(photo_path))
+    shutil.move(photo_path, photo_dest_path)
 
 def album_handler(args, album):
     """
@@ -87,13 +110,13 @@ def main(arguments):
 
     print("Albums:", len(data["albums"]))
 
-    # check for missing titles
+    # all albums must have titles
     for album in data["albums"]:
         if not album["title"]:
             print(album)
-            raise Exception("FIXME missing title")
+            raise Exception("FIXME missing album title")
         
-    # check for duplicate titles
+    # all albums titles must be unique
     titles = []
     titles_dup = []
     for album in data["albums"]:
