@@ -24,7 +24,7 @@ def photo_handler(args, photo, album_path):
 
     # TOOD Flickr file naming scheme: lower case, remove "."
     photo_path = photo["name"].lower().replace(".", "") + "_" + photo["id"] + "*"
-    matches = glob(os.path.join(args.data, photo_path))
+    matches = glob(os.path.join(args.src, photo_path))
     if len(matches) == 0:
         return # TODO
         # raise Exception("FIXME no matching found")
@@ -44,7 +44,7 @@ def album_handler(args, album):
     # print(album)
 
     # create album directories from titles
-    album_path = os.path.join(args.dest, album["title"])
+    album_path = os.path.join(args.dst, album["title"])
     if not os.path.exists(album_path):
         try:
             os.makedirs(album_path)
@@ -67,12 +67,12 @@ def main(arguments):
         description=__doc__,
         formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument('--metadata', help="metadata path")
-    parser.add_argument('--data', help="photo and video data path")
-    parser.add_argument('--dest', help="destination path")
+    parser.add_argument('--src', help="path to source photo and video files")
+    parser.add_argument('--dst', help="path to source files organized in albums")
 
     args = parser.parse_args(arguments)
 
-    if os.path.realpath(args.data) == os.path.realpath(args.dest):
+    if os.path.realpath(args.src) == os.path.realpath(args.dst):
         print("Source and Destination must be different")
         return 1
 
@@ -82,8 +82,8 @@ def main(arguments):
     with open(os.path.join(args.metadata, "albums.json")) as read_file:
         data = json.load(read_file)
 
-    if not os.path.exists(args.dest):
-        os.makedirs(args.dest)
+    if not os.path.exists(args.dst):
+        os.makedirs(args.dst)
 
     print("Albums:", len(data["albums"]))
 
